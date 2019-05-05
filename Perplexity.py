@@ -1,5 +1,10 @@
-# Use whole glove.twitter data? Or use our vocab to 
-# Construct a smaller vocab (w related words from twitter?)
+'''
+Perplexity object returns perplexity score for grammatical structure with the 
+"perplexity" function. (Sorry.)
+
+Currently returns the probability of consecutive grammar tags. We create a probability
+distribution of all possible tags following a certain "context" (preceding tags.)
+'''
 
 import numpy as np
 import nltk
@@ -10,7 +15,8 @@ from nltk.probability import ConditionalProbDist, ELEProbDist
 class Perplexity():
 
 	def __init__(self):
-		self.cfdist = self.init_grammar_freqdist('grammars.txt')
+		# We rely on the grammar-tagged data
+		self.cfdist = self.init_grammar_freqdist('Data/grammars.txt')
 		self.cpdist = ConditionalProbDist(self.cfdist, ELEProbDist, 10)
 
 	# @ https://stackoverflow.com/questions/37793118/load-pretrained-glove-vectors-in-python
@@ -34,6 +40,7 @@ class Perplexity():
 		return model
 
 	def perplexity(self, caption):
+		''' Takes in a string and returns the perplexity of its grammatical structure. '''
 		words = nltk.word_tokenize(caption)
 		tags = nltk.pos_tag(words)
 		tags = [tag[1] for tag in tags]
