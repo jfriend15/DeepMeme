@@ -6,20 +6,20 @@ import random
 import nltk
 
 def main():
-    top = open("toptext.txt", "r")
-    bottom = open("bottomtext.txt", "r")
+    top = open("./Data/toptext.txt", "r")
     texts = []
-    for i in top:
+    for i in top: # reads in the top texts
         i = i[:-1]+" "
         texts.append(i)
     k = 0
     top.close()
-    w = open("grammars.txt", "w+")
-    for j in bottom:
+    bottom = open("./Data/bottomtext.txt", "r")
+    w = open("./Data/grammars.txt", "w+")
+    for j in bottom: # reads in the bottom texts, appends to top texts
         texts[k] = texts[k]+j
-        texts[k] = nltk.word_tokenize(texts[k])
-        texts[k] = nltk.pos_tag(texts[k])
-        for i in texts[k]:
+        texts[k] = nltk.word_tokenize(texts[k]) # separates words in text (tokenizes)
+        texts[k] = nltk.pos_tag(texts[k]) # tags parts of speech in text
+        for i in texts[k]: # writes tags for each meme grammar in grammars.txt
             w.write(" "+i[1])
         w.write(".\n")
         k += 1
