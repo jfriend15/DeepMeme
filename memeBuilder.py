@@ -3,8 +3,10 @@ import random
 
 ABSORB_STATE = 55257680
 
+GENERICS = ['NNS', 'NN', 'JJ', 'IN', 'VBN', 'CD', 'DT', 'VB', '$', 'RB', '``', 'PRP', 'NNP', 'WP', 'CC', 'PRP$', 'VBD', 'VBZ', 'WRB']
 
-"""TODO: Create S as two ordered lists of strings (top and bottom text)"""
+topStates = []
+bottomStates = []
 
 """TODO: Get dictionaries for possible words for each part of speech (these will be our actions)"""
 
@@ -27,6 +29,8 @@ def main():
 
     for i in range(iterations):
         tt = topText(alpha, gamma, startState)
+
+    for i in range(iterations):
         bt = bottomText(alpha, gamma, startState, tt)
 
     finishedMeme = (tt, bt)
@@ -46,7 +50,7 @@ def topText(alpha, gamma, startState):
     grammar = startState
 
     while not s == ABSORB_STATE:
-        actions = getPossibleActions(s)
+        actions = getPossibleActions(s, grammar)
 
         actionValues = {}
 
@@ -60,11 +64,14 @@ def topText(alpha, gamma, startState):
 
         nextState = getNextState(s, chosenAction)
 
+        if not topStates.__contains__(nextState):
+            topStates.__add__(nextState)
+
         choiceValue = getWordScore(s, chosenAction[0], chosenAction[1], 0)
 
         r = choiceValue
 
-        value = (1 - alpha) * Q.get(s, chosenAction) + alpha * (r + gamma * maxExpectedNextState(nextState))
+        value = (1 - alpha) * Q.get(s, chosenAction) + alpha * (r + gamma * maxExpectedNextState(nextState, grammar))
 
         Q[chosenAction] = value
 
@@ -79,7 +86,7 @@ def bottomText(alpha, gamma, startState, topText):
     grammar = startState
 
     while not s == ABSORB_STATE:
-        actions = getPossibleActions(s)
+        actions = getPossibleActions(s, grammar)
 
         actionValues = {}
 
@@ -93,11 +100,14 @@ def bottomText(alpha, gamma, startState, topText):
 
         nextState = getNextState(s, chosenAction)
 
+        if not bottomStates.__contains__(nextState):
+            bottomStates.__add__(nextState)
+
         choiceValue = getWordScore(s, chosenAction[0], chosenAction[1], topText)
 
         r = choiceValue
 
-        value = (1 - alpha) * Q.get(s, chosenAction) + alpha * (r + gamma * maxExpectedNextState(nextState))
+        value = (1 - alpha) * Q.get(s, chosenAction) + alpha * (r + gamma * maxExpectedNextState(nextState, grammar))
 
         Q[chosenAction] = value
 
@@ -107,12 +117,30 @@ def bottomText(alpha, gamma, startState, topText):
 
 
 def getNextState(state, action):
-    """TODO: return the resulting state of the chosen action"""
-    return []
 
-def maxExpectedNextState(state):
-    """TODO: find the highest value action for the next state"""
-    return 0
+    newState = []
+
+    for word in state:
+        newState.append(word)
+
+    newState[action[0]] = action[1]
+    return newState
+
+def maxExpectedNextState(state, grammar):
+    possibleActions = getPossibleActions(state, grammar)
+
+
+    bestValue = Q[(state, possibleActions[0])]
+
+    for action in possibleActions:
+
+        v = Q[(state, action)]
+
+        if v > bestValue:
+            bestValue = v
+
+    return v
+
 
 """Takes a dict with actions and their values, and chooses one based on the softmax function"""
 def softMax(actionValues):
@@ -143,21 +171,32 @@ def getWordScore(sentence, index, newWord, topText):
     """TODO: give the value of replacing the word at index index with the given word"""
     return 0
 
-def getPossibleActions(sentence):
-    """TODO: Return all possible actions as a list of tuples {index, word} where index is the index of the word you"""
-    return ()
+def getPossibleActions(sentence, grammar):
+
+    possibleActions = ()
+
+    for i in range(len(sentence)):
+        possibleWords = getWordsForPartOfSpeech(grammar[i])
+        for word in possibleWords:
+            possibleActions.__add__((i, word))
+
+    return possibleActions
 
 def isFinished(sentence):
-    """"TODO: check if a sentence has unresolved parts of speech. Return 1 if no, 0 if yes"""
-    return 0
+    for word in sentence:
+        if isGeneric(word):
+            return 0
 
-def getDictionary(partOfSpeech):
-    """TODO: getDictionary(string) return dictionary of given part of speech"""
-    return {}
+    return 1
+
+def getWordsForPartOfSpeech(partOfSpeech):
+    """TODO: getDictionary(string) return list of words of given part of speech"""
+    return ()
 
 
 def isGeneric(word):
-    """TODO: return 1 if the word is a part of speech, 0 if it's literal"""
+    if GENERICS.__contains__(word):
+        return 1
     return 0
 
 def getStartState():
