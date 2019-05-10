@@ -19,26 +19,6 @@ class Perplexity():
 		self.cfdist = self.init_grammar_freqdist('Data/grammars.txt')
 		self.cpdist = ConditionalProbDist(self.cfdist, ELEProbDist, 10)
 
-	# @ https://stackoverflow.com/questions/37793118/load-pretrained-glove-vectors-in-python
-	def load_glove(gloveFile):
-		''' Not currently in use 
-
-		# to evaluate word choice
-		# build dictionary from top text and bottom text
-		# use glove twitter to get 100 closest words to each word in set(dict)
-		# if those words are of the types that should come next, great
-		'''
-		print("Loading Glove Model")
-		f = open(gloveFile,'r')
-		model = {}
-		for line in f:
-			splitLine = line.split()
-			word = splitLine[0]
-			embedding = np.array([float(val) for val in splitLine[1:]])
-			model[word] = embedding
-		print("Done.",len(model)," words loaded!")
-		return model
-
 	def perplexity(self, caption):
 		''' Takes in a string and returns the perplexity of its grammatical structure. '''
 		words = nltk.word_tokenize(caption)
