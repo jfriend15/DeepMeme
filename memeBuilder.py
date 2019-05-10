@@ -40,10 +40,10 @@ class memeBuilder:
 
 
         for i in range(iterations):
-            tt = self.topText(alpha, gamma, startState[0]) # top start
+            tt = self.topText(alpha, gamma, splitText[0]) # top start
 
         for i in range(iterations):
-            bt = self.bottomText(alpha, gamma, startState[1], tt) #  bottom start
+            bt = self.bottomText(alpha, gamma, splitText[1], tt) #  bottom start
 
         finishedMeme = (tt, bt)
 
@@ -66,7 +66,6 @@ class memeBuilder:
     """Returns the top and bottom text in list format"""
     def splitText(self, sentence):
         texts = sentence.split(' | ')
-
         return texts
 
 
@@ -76,13 +75,16 @@ class memeBuilder:
         they start getting changed"""
         grammar = startState
 
-        while not s == memeBuilder.ABSORB_STATE:
-            actions = self.getPossibleActions(s, grammar)
+        actions = self.getPossibleActions(s, grammar)
 
+        while not s == memeBuilder.ABSORB_STATE:
+
+            #print('all actions', actions)
             actionValues = {}
 
             for action in actions:
-                if not self.Q.__contains__((s, action)):
+                print(s, action)
+                if (s, action) not in self.Q.keys():
                     self.Q[(s, action)] = 0
 
                 actionValues[action] = self.Q[(s, action)]
@@ -98,7 +100,7 @@ class memeBuilder:
 
             r = choiceValue
 
-            value = (1 - alpha) * self.Q.get(s, chosenAction) + alpha * (r + gamma * self.maxExpectedNextState(nextState, grammar))
+            value = (1 - alpha) * self.Q.get((s, chosenAction)) + alpha * (r + gamma * self.maxExpectedNextState(nextState, grammar, actions))
 
             self.Q[chosenAction] = value
 
@@ -114,6 +116,8 @@ class memeBuilder:
         grammar = startState
 
         actions = self.getPossibleActions(s, grammar)
+        #print('all actions', actions)
+        #exit()
 
         while not s == memeBuilder.ABSORB_STATE:
 
@@ -145,7 +149,7 @@ class memeBuilder:
         return s
 
 
-    def getNextState(state, action):
+    def getNextState(self, state, action):
 
         newState = []
 
@@ -155,9 +159,9 @@ class memeBuilder:
         newState[action[0]] = action[1]
         return newState
 
-    def maxExpectedNextState(self, state, grammar):
-        possibleActions = self.getPossibleActions(state, grammar)
+    def maxExpectedNextState(self, state, grammar, possibleActions):
 
+        print(state, possibleActions[0])
         bestValue = self.Q[(state, possibleActions[0])]
 
         for action in possibleActions:
@@ -173,7 +177,7 @@ class memeBuilder:
     """Takes a dict with actions and their values, and chooses one based on the softmax function"""
     def softMax(self, actionValues):
         actionProbs = {}
-
+        #print(actionValues)
         denom = 0
         for action, value in actionValues.items():
             denom += math.pow(math.e, value)
@@ -181,11 +185,10 @@ class memeBuilder:
         for action, value in actionValues.items():
             actionProbs[action] = math.pow(math.e, value)/denom
 
-
         rand = random.random()
 
         total = 0
-        for action, prob in actionProbs:
+        for action, prob in actionProbs.items():
             total += prob
             if rand < total:
                 return action
@@ -214,13 +217,14 @@ class memeBuilder:
     def getPossibleActions(self, sentence, grammar):
         # TODO why for all words at once?
         # for all words not filled yet? for the next word
-        possibleActions = ()
+        possibleActions = []
         sentence = sentence.split(' ')
         grammar = grammar.split(' ')
         for i in range(len(sentence)):
+            print(grammar[i])
             possibleWords = self.getWordsForPartOfSpeech(grammar[i])
             for word in possibleWords:
-                possibleActions.__add__((i, word))
+                possibleActions.append((i, ''.join(word)))
 
         return possibleActions
 
