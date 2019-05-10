@@ -9,8 +9,8 @@ import grammarParser
 class memeBuilder:
 
     ABSORB_STATE = 55257680
-    GENERICS = ['NNS', 'NN', 'JJ', 'IN', 'VBN', 'CD', 'DT', 'VB', 
-                '$', 'RB', '``', 'PRP', 'NNP', 'WP', 'CC', 'PRP$', 
+    GENERICS = ['NNS', 'NN', 'JJ', 'IN', 'VBN', 'CD', 'DT', 'VB',
+                '$', 'RB', '``', 'PRP', 'NNP', 'WP', 'CC', 'PRP$',
                 'VBD', 'VBZ', 'WRB']
 
     def __init__(self): #input alpha, gamma, its, dicts
@@ -32,17 +32,18 @@ class memeBuilder:
         # TODO remove extra spaces between POSs
         # TODO what's the startState for toptext? for bottom?
         startState = self.getStartState().strip(".")
-        # split startstate into top and bot
+
+        splitText = self.splitText(startState)
 
         self.glove = self.load_dict('Data/gloveDict.pkl')
         self.POSDict = self.load_dict('Data/grammarDict.pkl')
 
 
         for i in range(iterations):
-            tt = self.topText(alpha, gamma, startState) # top start
+            tt = self.topText(alpha, gamma, startState[0]) # top start
 
         for i in range(iterations):
-            bt = self.bottomText(alpha, gamma, startState, tt) #  bottom start
+            bt = self.bottomText(alpha, gamma, startState[1], tt) #  bottom start
 
         finishedMeme = (tt, bt)
 
@@ -62,6 +63,13 @@ class memeBuilder:
         # TODO SEARCH FOR BAR
         return grammars[random.randint(0, len(grammars)-1)]
 
+    """Returns the top and bottom text in list format"""
+    def splitText(self, sentence):
+        texts = sentence.split(' | ')
+
+        return texts
+
+
     def topText(self, alpha, gamma, startState):
         s = startState
         """This is just to remember which parts of speech are where once 
@@ -74,25 +82,25 @@ class memeBuilder:
             actionValues = {}
 
             for action in actions:
-                if not Q.__contains__((s, action)):
-                    Q[(s, action)] = 0
+                if not self.Q.__contains__((s, action)):
+                    self.Q[(s, action)] = 0
 
-                actionValues[action] = Q[(s, action)]
+                actionValues[action] = self.Q[(s, action)]
 
             chosenAction = self.softMax(actionValues)
 
             nextState = self.getNextState(s, chosenAction)
 
-            if not topStates.__contains__(nextState):
-                topStates.__add__(nextState)
+            if not self.topStates.__contains__(nextState):
+                self.topStates.__add__(nextState)
 
             choiceValue = self.getWordScore(s, chosenAction[0], chosenAction[1], 0)
 
             r = choiceValue
 
-            value = (1 - alpha) * Q.get(s, chosenAction) + alpha * (r + gamma * maxExpectedNextState(nextState, grammar))
+            value = (1 - alpha) * self.Q.get(s, chosenAction) + alpha * (r + gamma * self.maxExpectedNextState(nextState, grammar))
 
-            Q[chosenAction] = value
+            self.Q[chosenAction] = value
 
             s = nextState
 
@@ -121,16 +129,16 @@ class memeBuilder:
 
             nextState = self.getNextState(s, chosenAction)
 
-            if not bottomStates.__contains__(nextState):
-                bottomStates.__add__(nextState)
+            if not self.bottomStates.__contains__(nextState):
+                self.bottomStates.__add__(nextState)
 
             choiceValue = self.getWordScore(s, chosenAction[0], chosenAction[1], topText)
 
             r = choiceValue
 
-            value = (1 - alpha) * Q.get(s, chosenAction) + alpha * (r + gamma * self.maxExpectedNextState(nextState, grammar))
+            value = (1 - alpha) * self.Q.get(s, chosenAction) + alpha * (r + gamma * self.maxExpectedNextState(nextState, grammar))
 
-            Q[chosenAction] = value
+            self.Q[chosenAction] = value
 
             s = nextState
 
@@ -147,14 +155,14 @@ class memeBuilder:
         newState[action[0]] = action[1]
         return newState
 
-    def maxExpectedNextState(state, grammar):
+    def maxExpectedNextState(self, state, grammar):
         possibleActions = self.getPossibleActions(state, grammar)
 
-        bestValue = Q[(state, possibleActions[0])]
+        bestValue = self.Q[(state, possibleActions[0])]
 
         for action in possibleActions:
 
-            v = Q[(state, action)]
+            v = self.Q[(state, action)]
 
             if v > bestValue:
                 bestValue = v
@@ -187,14 +195,14 @@ class memeBuilder:
 
     """Takes as parameters the sentence, the index of the word to be replaced, the new word, and top text if it's bottom
     text (otherwise topText is 0)"""
-    def getWordScore(sentence, index, newWord, topText):
+    def getWordScore(self, sentence, index, newWord, topText):
         """TODO: give the value of replacing the word at index index with the given word"""
         def score(word, next_word):
             '''Returns Euclidean distance of the 2 word embeddings in GLOVE.'''
             try:
-                embd = glove[word]
-                next_embd = glove[next_word]
-                dist = np.linalg.norm(embd - next_embd)
+                embd = self.glove[word]
+                next_embd = self.glove[next_word]
+                dist = self.np.linalg.norm(embd - next_embd)
                 return dist
             except KeyError:
                 print(word, ' and/or ', next_word, ' is not in the dictionary.')
@@ -216,9 +224,9 @@ class memeBuilder:
 
         return possibleActions
 
-    def isFinished(sentence):
+    def isFinished(self, sentence):
         for word in sentence:
-            if isGeneric(word):
+            if self.isGeneric(word):
                 return 0
 
         return 1
@@ -228,8 +236,8 @@ class memeBuilder:
         return self.POSDict[partOfSpeech]
 
 
-    def isGeneric(word):
-        if GENERICS.__contains__(word):
+    def isGeneric(self, word):
+        if self.GENERICS.__contains__(word):
             return 1
         return 0
 
@@ -253,10 +261,3 @@ def main():
 
 
 main()
-
-
-
-
-
-
-
