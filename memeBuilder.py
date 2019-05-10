@@ -232,7 +232,7 @@ class memeBuilder:
 
 def main():
 
-    if !os.path.exists("./Data/grammars.txt"):
+    if not os.path.exists("./Data/grammars.txt"):
         print("Parsing grammar of data...", end="")
         grammarParser.main()
         print("done.")
@@ -241,7 +241,7 @@ def main():
         os.system("TextGen.py 5")
         print("done.")
 
-    if !os.path.exists("./Data/grammarDict.pkl"):
+    if not os.path.exists("./Data/grammarDict.pkl"):
         dictBuilder.main()
 
     M = memeBuilder()
