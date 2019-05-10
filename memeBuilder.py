@@ -232,21 +232,19 @@ class memeBuilder:
 
 def main():
 
-    # TODO determine whether to update or not; if exists?
-    '''print("Parsing grammar of data...", end="")
-    grammarParser.main()
-    print("done.")
+    if !os.path.exists("./Data/grammars.txt"):
+        print("Parsing grammar of data...", end="")
+        grammarParser.main()
+        print("done.")
 
-    print("Generating new gammars...", end="")
-    os.system("TextGen.py 5")
-    print("done.")'''
+        print("Generating new gammars...", end="")
+        os.system("TextGen.py 5")
+        print("done.")
 
-    # TODO run dictBuilder only if there's been an update to a dict file
-    # or it doesn't exist yet
-    #dictBuilder.main()
+    if !os.path.exists("./Data/grammarDict.pkl"):
+        dictBuilder.main()
 
     M = memeBuilder()
-
 
 
 main()
