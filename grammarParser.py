@@ -4,14 +4,17 @@
 
 import random
 import nltk
+import string
 
 def main():
     top = open("./Data/toptext.txt", "r")
+    punctuation = string.punctuation.replace("'", "")
     topTexts = []
     bottomTexts = []
     for i in top: # reads in the top texts
         i = i[:-1]+" "
         i = i.lower()
+        i = i.translate(str.maketrans('', '', punctuation))
         i = nltk.word_tokenize(i) # separates words in text (tokenizes)
         i = nltk.pos_tag(i) # tags parts of speech in text
         topTexts.append(i)
@@ -21,6 +24,7 @@ def main():
     w = open("./Data/grammars.txt", "w+")
     for j in bottom: # reads in the bottom texts, appends to top texts
         j = j.lower()
+        j = j.translate(str.maketrans('', '', punctuation))
         j = nltk.word_tokenize(j)
         j = nltk.pos_tag(j)
         bottomTexts.append(j)
@@ -33,5 +37,6 @@ def main():
         k += 1
     w.close()
     bottom.close()
-    
-main()
+
+if __name__ == '__main__':
+    main()

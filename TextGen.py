@@ -62,4 +62,5 @@ def main():
     out.write("\n")
     out.close()
 
-main()
+if __name__ == '__main__':
+    main()
