@@ -32,16 +32,17 @@ class memeBuilder:
         # TODO remove extra spaces between POSs
         # TODO what's the startState for toptext? for bottom?
         startState = self.getStartState().strip(".")
+        # split startstate into top and bot
 
         self.glove = self.load_dict('Data/gloveDict.pkl')
         self.POSDict = self.load_dict('Data/grammarDict.pkl')
 
 
         for i in range(iterations):
-            tt = self.topText(alpha, gamma, startState)
+            tt = self.topText(alpha, gamma, startState) # top start
 
         for i in range(iterations):
-            bt = self.bottomText(alpha, gamma, startState, tt)
+            bt = self.bottomText(alpha, gamma, startState, tt) #  bottom start
 
         finishedMeme = (tt, bt)
 
@@ -52,10 +53,13 @@ class memeBuilder:
         dict_file = open(file, "rb")
         return pickle.load(dict_file)
 
+    # TODO method that splits generated grammar into top and bottom text
+
     def getStartState(self):
         """Retrives a generated grammar skeleton. Returns a string."""
         grammarData = open('Data/genGrammars.txt','r')
         grammars = [line.strip() for line in grammarData.readlines()]
+        # TODO SEARCH FOR BAR
         return grammars[random.randint(0, len(grammars)-1)]
 
     def topText(self, alpha, gamma, startState):
@@ -101,29 +105,30 @@ class memeBuilder:
         they start getting changed"""
         grammar = startState
 
+        actions = self.getPossibleActions(s, grammar)
+
         while not s == memeBuilder.ABSORB_STATE:
-            actions = getPossibleActions(s, grammar)
 
             actionValues = {}
 
             for action in actions:
-                if not Q.__contains__((s, action)):
-                    Q[(s, action)] = 0
+                if not self.Q.__contains__((s, action)):
+                    self.Q[(s, action)] = 0
 
-                actionValues[action] = Q[(s, action)]
+                actionValues[action] = self.Q[(s, action)]
 
-            chosenAction = softMax(actionValues)
+            chosenAction = self.softMax(actionValues)
 
-            nextState = getNextState(s, chosenAction)
+            nextState = self.getNextState(s, chosenAction)
 
             if not bottomStates.__contains__(nextState):
                 bottomStates.__add__(nextState)
 
-            choiceValue = getWordScore(s, chosenAction[0], chosenAction[1], topText)
+            choiceValue = self.getWordScore(s, chosenAction[0], chosenAction[1], topText)
 
             r = choiceValue
 
-            value = (1 - alpha) * Q.get(s, chosenAction) + alpha * (r + gamma * maxExpectedNextState(nextState, grammar))
+            value = (1 - alpha) * Q.get(s, chosenAction) + alpha * (r + gamma * self.maxExpectedNextState(nextState, grammar))
 
             Q[chosenAction] = value
 
