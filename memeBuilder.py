@@ -9,7 +9,6 @@ import grammarParser
 
 
 class memeBuilder:
-    ABSORB_STATE = 55257680
     GENERICS = ['NNS', 'NN', 'JJ', 'IN', 'VBN', 'CD', 'DT', 'VB',
                 '$', 'RB', '``', 'PRP', 'NNP', 'WP', 'CC', 'PRP$',
                 'VBD', 'VBZ', 'WRB']
@@ -78,7 +77,7 @@ class memeBuilder:
         actions = self.getPossibleActions(s, grammar)
         actionValues = {}
 
-        while not s == memeBuilder.ABSORB_STATE:
+        while not s == memeBuilder.FINISH_SENTENCE:
 
             if self.isFinished(s):
                 actions.append(self.FINISH_SENTENCE)
@@ -113,13 +112,17 @@ class memeBuilder:
         return s
 
     def bottomText(self, alpha, gamma, startState, topText):
+        # s will change, grammar will not
         s = startState
         grammar = startState
 
         actions = self.getPossibleActions(s, grammar)
         actionValues = {}
 
-        while not s == memeBuilder.ABSORB_STATE:
+        while not s == memeBuilder.FINISH_SENTENCE:
+
+            if self.isFinished(s):
+                actions.append(self.FINISH_SENTENCE)
 
             for action in actions:
                 if (s, action) not in self.Q.keys():
@@ -128,19 +131,22 @@ class memeBuilder:
                 actionValues[action] = self.Q[(s, action)]
 
             chosenAction = self.softMax(actionValues)
+            print('Chosen action is ', chosenAction)
 
             nextState = self.getNextState(s, chosenAction)
+            print('Next state is ', nextState)
 
-            if not self.bottomStates.__contains__(nextState):
-                self.bottomStates.append(nextState)
+            if not self.topStates.__contains__(nextState):
+                self.topStates.append(nextState)
 
             choiceValue = self.getWordScore(s, chosenAction[0], chosenAction[1], topText)
 
             r = choiceValue
 
-            value = (1 - alpha) * self.Q.get(s, chosenAction) + alpha * (
-                        r + gamma * self.maxExpectedNextState(nextState, grammar))
+            value = (1 - alpha) * self.Q.get((s, chosenAction)) + alpha * (
+                    r + gamma * self.maxExpectedNextState(nextState, grammar, actions))
 
+            print('Overall value is', value)
             self.Q[chosenAction] = value
 
             s = nextState
@@ -161,6 +167,9 @@ class memeBuilder:
         return ' '.join(newState)
 
     def maxExpectedNextState(self, state, grammar, possibleActions):
+
+        if state == self.FINISH_SENTENCE:
+            return 0
 
         pair = (state, possibleActions[0])
         if pair not in self.Q.keys():
