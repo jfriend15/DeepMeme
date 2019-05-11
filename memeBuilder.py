@@ -32,7 +32,6 @@ class memeBuilder:
         startState = self.getStartState().strip(".")
         splitText = self.splitText(startState)
         print("Start state is ", startState)
-        exit()
 
         self.glove = self.load_dict('Data/gloveDict.pkl')
         self.POSDict = self.load_dict('Data/grammarDict.pkl')
@@ -78,7 +77,9 @@ class memeBuilder:
         while not s == memeBuilder.FINISH_SENTENCE:
 
             if self.isFinished(s):
-                actions.append(self.FINISH_SENTENCE)
+                print('sentence is finished')
+                if not actions.__contains__(self.FINISH_SENTENCE):
+                    actions.append(self.FINISH_SENTENCE)
 
             for action in actions:
                 if (s, action) not in self.Q.keys():
@@ -87,7 +88,7 @@ class memeBuilder:
                 actionValues[action] = self.Q[(s, action)]
 
             chosenAction = self.softMax(actionValues)
-            print('Chosen action is ', chosenAction)
+            #print('Chosen action is ', chosenAction)
 
             nextState = self.getNextState(s, chosenAction)
             print('Next state is ', nextState)
@@ -102,7 +103,7 @@ class memeBuilder:
             value = (1 - alpha) * self.Q.get((s, chosenAction)) + alpha * (
                         r + gamma * self.maxExpectedNextState(nextState, grammar, actions))
 
-            print('Overall value is', value)
+            #print('Overall value is', value)
             self.Q[chosenAction] = value
 
             s = nextState
@@ -129,7 +130,7 @@ class memeBuilder:
                 actionValues[action] = self.Q[(s, action)]
 
             chosenAction = self.softMax(actionValues)
-            print('Chosen action is ', chosenAction)
+            #print('Chosen action is ', chosenAction)
 
             nextState = self.getNextState(s, chosenAction)
             print('Next state is ', nextState)
@@ -144,7 +145,7 @@ class memeBuilder:
             value = (1 - alpha) * self.Q.get((s, chosenAction)) + alpha * (
                     r + gamma * self.maxExpectedNextState(nextState, grammar, actions))
 
-            print('Overall value is', value)
+            #print('Overall value is', value)
             self.Q[chosenAction] = value
 
             s = nextState
