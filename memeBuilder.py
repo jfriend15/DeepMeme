@@ -136,8 +136,8 @@ class memeBuilder:
             nextState = self.getNextState(s, chosenAction)
             print('Next state is ', nextState)
 
-            if not self.topStates.__contains__(nextState):
-                self.topStates.append(nextState)
+            if not self.bottomStates.__contains__(nextState):
+                self.bottomStates.append(nextState)
 
             choiceValue = self.getWordScore(s, chosenAction[0], chosenAction[1], topText)
 
