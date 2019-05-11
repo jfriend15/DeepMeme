@@ -62,9 +62,7 @@ class memeBuilder:
             g = grammars[random.randint(0, len(grammars)-1)]
         return g.replace(',', '').replace("''", '')
 
-
     """Returns the top and bottom text in list format"""
-
     def splitText(self, sentence):
         texts = sentence.split(' | ')
         return texts
@@ -266,8 +264,6 @@ class memeBuilder:
         return newScore - oldScore
 
     def getPossibleActions(self, sentence, grammar):
-        # TODO why for all words at once?
-        # for all words not filled yet? for the next word
         possibleActions = []
         sentence = sentence.split(' ')
         grammar = grammar.split(' ')
