@@ -14,7 +14,7 @@ class memeBuilder:
                 '$', 'RB', '``', 'PRP', 'NNP', 'WP', 'CC', 'PRP$',
                 'VBD', 'VBZ', 'WRB']
 
-    def __init__(self): #input alpha, gamma, its, dicts
+    def __init__(self, iterations, alpha, gamma):
         self.topStates = []
         self.bottomStates = []
 
@@ -22,21 +22,16 @@ class memeBuilder:
         We will add these as we encounter them"""
         self.Q = {}
 
-        iterations = 100
-        alpha = 0.5
-        gamma = 0.9
-
         self.finishedMeme = ((), ())
 
         # Retrieve generated grammar in string 
         startState = self.getStartState().strip(".")
         splitText = self.splitText(startState)
         print("Start state is ", startState)
+        exit()
 
         self.glove = self.load_dict('Data/gloveDict.pkl')
         self.POSDict = self.load_dict('Data/grammarDict.pkl')
-
-        #print(self.POSDict)
 
         for i in range(iterations):
             tt = self.topText(alpha, gamma, splitText[0]) # top start
@@ -58,8 +53,11 @@ class memeBuilder:
         """Retrives a generated grammar skeleton. Returns a string."""
         grammarData = open('Data/genGrammars.txt','r')
         grammars = [line.strip() for line in grammarData.readlines()]
-        #return grammars[random.randint(0, len(grammars)-1)]
-        return grammars[0]
+        # Ensure that the grammar has top and bottom text
+        g =''
+        while '|' not in g: # Take out commas for now
+            g = grammars[random.randint(0, len(grammars)-1)]
+        return g.replace(',', '').replace("''", '')
 
     """Returns the top and bottom text in list format"""
     def splitText(self, sentence):
@@ -193,20 +191,20 @@ class memeBuilder:
     """Takes as parameters the sentence, the index of the word to be replaced, the new word, and top text if it's bottom
     text (otherwise topText is 0)"""
     def getWordScore(self, sentence, index, newWord, topText):
-        """TODO: give the value of replacing the word at index index with the given word"""
+
         def score(context, word):
             '''Returns average Euclidean distance of the new word 
             from the old words from embeddings in GLOVE.'''
             avg_dist = []
             if word not in self.glove.keys():
-                return 20
+                return 10
 
             new_embd = self.glove[word]
             for old_word in context:
                 # If either word isn't in glove or the old word is generic,
                 # give it a far distance to motivate not picking it
                 if self.isGeneric(old_word) or old_word not in self.glove.keys():
-                    dist = 20
+                    dist = 10
                 else:
                     embd = self.glove[old_word]
                     dist = np.linalg.norm(embd - new_embd)
@@ -215,18 +213,16 @@ class memeBuilder:
 
             return sum(avg_dist)/len(avg_dist)
 
-            
 
         sentence = sentence.split(' ')
         oldWord = sentence[index]
         del sentence[index]
 
+        if topText != 0:
+            sentence.extend(topText.split(' '))
+
         oldScore = score(sentence, oldWord)
         newScore = score(sentence, newWord)
-
-        #print('Old words: ', sentence)
-        #print(oldWord, oldScore)
-        #print(newWord, newScore)
 
         return newScore - oldScore
 
@@ -276,8 +272,8 @@ def main():
     if not os.path.exists("Data/grammarDict.pkl"):
         dictBuilder.main()
 
-    
-    M = memeBuilder()
+    # Input iterations, alpha, gamma
+    M = memeBuilder(100, 0.5, 0.9)
 
 
 main()
