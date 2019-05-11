@@ -7,14 +7,19 @@ import numpy as np
 import dictBuilder
 import grammarParser
 
-class memeBuilder:
 
+class memeBuilder:
     ABSORB_STATE = 55257680
     GENERICS = ['NNS', 'NN', 'JJ', 'IN', 'VBN', 'CD', 'DT', 'VB',
                 '$', 'RB', '``', 'PRP', 'NNP', 'WP', 'CC', 'PRP$',
                 'VBD', 'VBZ', 'WRB']
 
+    FINISH_SENTENCE = (-1, "")
+
+    SENTENCE_BASE_SCORE = 100
+
     def __init__(self, iterations, alpha, gamma):
+
         self.topStates = []
         self.bottomStates = []
 
@@ -24,7 +29,7 @@ class memeBuilder:
 
         self.finishedMeme = ((), ())
 
-        # Retrieve generated grammar in string 
+        # Retrieve generated grammar in string
         startState = self.getStartState().strip(".")
         splitText = self.splitText(startState)
         print("Start state is ", startState)
@@ -34,10 +39,10 @@ class memeBuilder:
         self.POSDict = self.load_dict('Data/grammarDict.pkl')
 
         for i in range(iterations):
-            tt = self.topText(alpha, gamma, splitText[0]) # top start
+            tt = self.topText(alpha, gamma, splitText[0])  # top start
 
         for i in range(iterations):
-            bt = self.bottomText(alpha, gamma, splitText[1], tt) #  bottom start
+            bt = self.bottomText(alpha, gamma, splitText[1], tt)  # bottom start
 
         finishedMeme = (tt, bt)
 
@@ -48,10 +53,9 @@ class memeBuilder:
         dict_file = open(file, "rb")
         return pickle.load(dict_file)
 
-
     def getStartState(self):
         """Retrives a generated grammar skeleton. Returns a string."""
-        grammarData = open('Data/genGrammars.txt','r')
+        grammarData = open('Data/genGrammars.txt', 'r')
         grammars = [line.strip() for line in grammarData.readlines()]
         # Ensure that the grammar has top and bottom text
         g =''
@@ -59,11 +63,12 @@ class memeBuilder:
             g = grammars[random.randint(0, len(grammars)-1)]
         return g.replace(',', '').replace("''", '')
 
+
     """Returns the top and bottom text in list format"""
+
     def splitText(self, sentence):
         texts = sentence.split(' | ')
         return texts
-
 
     def topText(self, alpha, gamma, startState):
         # s will change, grammar will not
@@ -72,15 +77,17 @@ class memeBuilder:
 
         actions = self.getPossibleActions(s, grammar)
         actionValues = {}
-            
+
         while not s == memeBuilder.ABSORB_STATE:
+
+            if self.isFinished(s):
+                actions.append(self.FINISH_SENTENCE)
 
             for action in actions:
                 if (s, action) not in self.Q.keys():
                     self.Q[(s, action)] = 0
 
                 actionValues[action] = self.Q[(s, action)]
-
 
             chosenAction = self.softMax(actionValues)
             print('Chosen action is ', chosenAction)
@@ -95,7 +102,8 @@ class memeBuilder:
 
             r = choiceValue
 
-            value = (1 - alpha) * self.Q.get((s, chosenAction)) + alpha * (r + gamma * self.maxExpectedNextState(nextState, grammar, actions))
+            value = (1 - alpha) * self.Q.get((s, chosenAction)) + alpha * (
+                        r + gamma * self.maxExpectedNextState(nextState, grammar, actions))
 
             print('Overall value is', value)
             self.Q[chosenAction] = value
@@ -130,7 +138,8 @@ class memeBuilder:
 
             r = choiceValue
 
-            value = (1 - alpha) * self.Q.get(s, chosenAction) + alpha * (r + gamma * self.maxExpectedNextState(nextState, grammar))
+            value = (1 - alpha) * self.Q.get(s, chosenAction) + alpha * (
+                        r + gamma * self.maxExpectedNextState(nextState, grammar))
 
             self.Q[chosenAction] = value
 
@@ -138,8 +147,11 @@ class memeBuilder:
 
         return s
 
-
     def getNextState(self, state, action):
+
+        if state == self.FINISH_SENTENCE:
+            return self.ABSORB_STATE
+
         newState = []
 
         for word in state.split(' '):
@@ -165,17 +177,17 @@ class memeBuilder:
 
         return v
 
-
     """Takes a dict with actions and their values, and chooses one based on the softmax function"""
+
     def softMax(self, actionValues):
         actionProbs = {}
-        #print(actionValues)
+        # print(actionValues)
         denom = 0
         for action, value in actionValues.items():
             denom += math.pow(math.e, value)
 
         for action, value in actionValues.items():
-            actionProbs[action] = math.pow(math.e, value)/denom
+            actionProbs[action] = math.pow(math.e, value) / denom
 
         rand = random.random()
 
@@ -187,13 +199,26 @@ class memeBuilder:
 
         return 0
 
-
     """Takes as parameters the sentence, the index of the word to be replaced, the new word, and top text if it's bottom
     text (otherwise topText is 0)"""
+
     def getWordScore(self, sentence, index, newWord, topText):
 
+        def sentenceScore(s):
+
+            discount = 0
+
+            for word in s:
+                value = score(s, word)
+                discount += value
+
+            discount /= len(s)
+
+            return self.SENTENCE_BASE_SCORE/discount
+
+
         def score(context, word):
-            '''Returns average Euclidean distance of the new word 
+            '''Returns average Euclidean distance of the new word
             from the old words from embeddings in GLOVE.'''
             avg_dist = []
             if word not in self.glove.keys():
@@ -211,7 +236,12 @@ class memeBuilder:
 
                 avg_dist.append(dist)
 
-            return sum(avg_dist)/len(avg_dist)
+            return sum(avg_dist) / len(avg_dist)
+
+
+        if index == -1:
+            sentence = sentence.split(' ')
+            return sentenceScore(sentence)
 
 
         sentence = sentence.split(' ')
@@ -233,7 +263,7 @@ class memeBuilder:
         sentence = sentence.split(' ')
         grammar = grammar.split(' ')
         for i in range(len(sentence)):
-            #print(grammar[i])
+            # print(grammar[i])
             possibleWords = self.getWordsForPartOfSpeech(grammar[i])
             for word in possibleWords:
                 possibleActions.append((i, ''.join(word)))
@@ -251,12 +281,10 @@ class memeBuilder:
         """Returns list of tokenized words from dataset given a POS"""
         return self.POSDict[partOfSpeech]
 
-
     def isGeneric(self, word):
         if self.GENERICS.__contains__(word):
             return 1
         return 0
-
 
 
 def main():
