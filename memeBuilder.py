@@ -15,6 +15,8 @@ class memeBuilder:
 
     FINISH_SENTENCE = (-1, "")
 
+    ABSORB_STATE = 986700870805
+
     SENTENCE_BASE_SCORE = 100
 
     def __init__(self):  # input alpha, gamma, its, dicts
@@ -77,10 +79,11 @@ class memeBuilder:
         actions = self.getPossibleActions(s, grammar)
         actionValues = {}
 
-        while not s == memeBuilder.FINISH_SENTENCE:
+        while not s == memeBuilder.ABSORB_STATE:
 
             if self.isFinished(s):
-                actions.append(self.FINISH_SENTENCE)
+                if not actions.__contains__(self.FINISH_SENTENCE):
+                    actions.append(self.FINISH_SENTENCE)
 
             for action in actions:
                 if (s, action) not in self.Q.keys():
@@ -119,10 +122,11 @@ class memeBuilder:
         actions = self.getPossibleActions(s, grammar)
         actionValues = {}
 
-        while not s == memeBuilder.FINISH_SENTENCE:
+        while not s == memeBuilder.ABSORB_STATE:
 
             if self.isFinished(s):
-                actions.append(self.FINISH_SENTENCE)
+                if not actions.__contains__(self.FINISH_SENTENCE):
+                    actions.append(self.FINISH_SENTENCE)
 
             for action in actions:
                 if (s, action) not in self.Q.keys():
@@ -168,7 +172,7 @@ class memeBuilder:
 
     def maxExpectedNextState(self, state, grammar, possibleActions):
 
-        if state == self.FINISH_SENTENCE:
+        if state == self.ABSORB_STATE:
             return 0
 
         pair = (state, possibleActions[0])
