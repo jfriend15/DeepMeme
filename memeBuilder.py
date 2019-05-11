@@ -15,6 +15,8 @@ class memeBuilder:
 
     FINISH_SENTENCE = (-1, "")
 
+    ABSORB_STATE = 986700870805
+
     SENTENCE_BASE_SCORE = 100
 
     def __init__(self, iterations, alpha, gamma):
@@ -38,9 +40,13 @@ class memeBuilder:
 
         for i in range(iterations):
             tt = self.topText(alpha, gamma, splitText[0])  # top start
-
+            print('Iteration', i, ': ', tt)
+        
+        #print("Top text is", tt)
+        #print(splitText[1])
         for i in range(iterations):
             bt = self.bottomText(alpha, gamma, splitText[1], tt)  # bottom start
+            print('Iteration', i, ': ', bt)
 
         finishedMeme = (tt, bt)
 
@@ -59,7 +65,9 @@ class memeBuilder:
         g =''
         while '|' not in g: # Take out commas for now
             g = grammars[random.randint(0, len(grammars)-1)]
-        return g.replace(',', '').replace("''", '')
+        
+        g = g.replace(',', '').replace("''", '').replace("  ", " ")
+        return g
 
     """Returns the top and bottom text in list format"""
     def splitText(self, sentence):
@@ -74,12 +82,13 @@ class memeBuilder:
         actions = self.getPossibleActions(s, grammar)
         actionValues = {}
 
-        while not s == memeBuilder.FINISH_SENTENCE:
+        finishedCount = 0
+        while True:
 
             if self.isFinished(s):
-                print('sentence is finished')
-                if not actions.__contains__(self.FINISH_SENTENCE):
-                    actions.append(self.FINISH_SENTENCE)
+                finishedCount += 1
+                if not actions.__contains__(memeBuilder.FINISH_SENTENCE):
+                    actions.append(memeBuilder.FINISH_SENTENCE)
 
             for action in actions:
                 if (s, action) not in self.Q.keys():
@@ -87,11 +96,17 @@ class memeBuilder:
 
                 actionValues[action] = self.Q[(s, action)]
 
-            chosenAction = self.softMax(actionValues)
+            if finishedCount == 50:
+                chosenAction = memeBuilder.FINISH_SENTENCE
+            else:
+                chosenAction = self.softMax(actionValues)
             #print('Chosen action is ', chosenAction)
 
             nextState = self.getNextState(s, chosenAction)
-            print('Next state is ', nextState)
+            #print('Next state is ', nextState)
+
+            if nextState == memeBuilder.ABSORB_STATE:
+                break
 
             if not self.topStates.__contains__(nextState):
                 self.topStates.append(nextState)
@@ -118,10 +133,12 @@ class memeBuilder:
         actions = self.getPossibleActions(s, grammar)
         actionValues = {}
 
-        while not s == memeBuilder.FINISH_SENTENCE:
+        finishedCount = 0
+        while True:
 
             if self.isFinished(s):
-                actions.append(self.FINISH_SENTENCE)
+                if not actions.__contains__(self.FINISH_SENTENCE):
+                    actions.append(self.FINISH_SENTENCE)
 
             for action in actions:
                 if (s, action) not in self.Q.keys():
@@ -129,11 +146,16 @@ class memeBuilder:
 
                 actionValues[action] = self.Q[(s, action)]
 
-            chosenAction = self.softMax(actionValues)
-            #print('Chosen action is ', chosenAction)
+            if finishedCount == 50:
+                chosenAction = memeBuilder.FINISH_SENTENCE
+            else:
+                chosenAction = self.softMax(actionValues)
 
             nextState = self.getNextState(s, chosenAction)
-            print('Next state is ', nextState)
+            #print('Next state is ', nextState)
+
+            if nextState == memeBuilder.ABSORB_STATE:
+                break
 
             if not self.bottomStates.__contains__(nextState):
                 self.bottomStates.append(nextState)
@@ -154,8 +176,8 @@ class memeBuilder:
 
     def getNextState(self, state, action):
 
-        if state == self.FINISH_SENTENCE:
-            return self.ABSORB_STATE
+        if action == memeBuilder.FINISH_SENTENCE:
+            return memeBuilder.ABSORB_STATE
 
         newState = []
 
@@ -167,7 +189,7 @@ class memeBuilder:
 
     def maxExpectedNextState(self, state, grammar, possibleActions):
 
-        if state == self.FINISH_SENTENCE:
+        if state == self.ABSORB_STATE:
             return 0
 
         pair = (state, possibleActions[0])
