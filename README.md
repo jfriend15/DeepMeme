@@ -2,8 +2,7 @@ Requires the GloVe word vectors pretrained on Twitter; can be found [here](https
 
 
 grammarParser.py:
-    Requirements:
-        - install nltk to computer, download nltk_data [here](https://www.nltk.org/data.html)
+    Requirements: NLTK, download nltk_data [here](https://www.nltk.org/data.html)
     Input: None
     Output: outputs all tagged data from toptext.txt and bottomtext.txt to grammars.txt in Data directory
 
