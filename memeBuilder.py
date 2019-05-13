@@ -19,7 +19,7 @@ class memeBuilder:
 
     SENTENCE_BASE_reward = 100
 
-    def __init__(self, iterations, alpha, gamma):
+    def __init__(self, iterations, alpha, gamma, randomStart=True):
 
         self.topStates = []
         self.bottomStates = []
@@ -29,7 +29,7 @@ class memeBuilder:
         self.Q = {}
 
         # Retrieve generated grammar in string
-        startState = self.getStartState().strip(".")
+        startState = self.getStartState(randomStart).strip(".")
         splitText = self.splitText(startState)
         print("Start state: ", startState)
 
@@ -59,17 +59,20 @@ class memeBuilder:
         return pickle.load(dict_file)
 
     """Retrives a generated grammar skeleton. Returns a string."""
-    def getStartState(self):
+    def getStartState(self, randomStart=True):
         grammarData = open('Data/genGrammars.txt', 'r')
         grammars = [line.strip() for line in grammarData.readlines()]
         
-        # Ensure that the grammar has top and bottom text
-        g =''
-        while '|' not in g or 'RP' in g: # Take out commas for now
-            g = grammars[random.randint(0, len(grammars)-1)]
-        
-        g = g.replace(',', '').replace("''", '').replace("  ", " ")
-        return g
+        if randomStart:
+            # Ensure that the grammar has top and bottom text
+            g =''
+            while '|' not in g or 'RP' in g: # Take out commas for now
+                g = grammars[random.randint(0, len(grammars)-1)]
+            
+            g = g.replace(',', '').replace("''", '').replace("  ", " ")
+            return g
+        else:
+            return grammars[0]
 
     """Returns the top and bottom text in list format"""
     def splitText(self, sentence):
@@ -314,7 +317,7 @@ def iterationExperiment(eName, itRange, alpha, gamma):
     output = open('Results/'+eName+'.txt', 'w+')
     output.write('Iteration range='+str(itRange)+',Alpha='+str(alpha)+',Gamma='+str(gamma)+'\n')
     for its in itRange:
-        M = memeBuilder(its, alpha, gamma)
+        M = memeBuilder(its, alpha, gamma, randomStart=False)
         output.write(str(its)+':'+str(M.rewardRecord)+'\n')
     output.close()
 
@@ -323,7 +326,7 @@ def alphaExperiment(eName, its, alRange, gamma):
     output = open('Results/'+eName+'.txt', 'w+')
     output.write('Iterations='+str(its)+',Alpha range='+str(alRange)+',Gamma='+str(gamma)+'\n')
     for alpha in alRange:
-        M = memeBuilder(its, alpha, gamma)
+        M = memeBuilder(its, alpha, gamma, randomStart=False)
         output.write(str(alpha)+':'+str(M.rewardRecord)+'\n')
     output.close()
 
@@ -331,7 +334,7 @@ def gammaExperiment(eName, its, alpha, gamRange):
     output = open('Results/'+eName+'.txt', 'w+')
     output.write('Iterations='+str(its)+',Alpha='+str(alpha)+',Gamma range='+str(gamRange)+'\n')
     for gamma in gamRange:
-        M = memeBuilder(its, alpha, gamma)
+        M = memeBuilder(its, alpha, gamma, randomStart=False)
         output.write(str(gamma)+':'+str(M.rewardRecord)+'\n')
     output.close()
 
@@ -350,8 +353,8 @@ def main():
         dictBuilder.main()
 
     # Input the range you want to test
-    iterationExperiment('itertations', [50, 100, 200, 500], 0.5, 0.9)
-    alphaExperiment('alphas', 10, [0.1,0.3,0.5,0.7,0.9], 0.9)
-    gammaExperiment('gammas', 100, 0.5, [0.1,0.3,0.5,0.7,0.9])
+    iterationExperiment('itertations_setstart', [50, 100, 200, 500], 0.5, 0.9)
+    alphaExperiment('alphas_setstart', 10, [0.1,0.3,0.5,0.7,0.9], 0.9)
+    gammaExperiment('gammas_setstart', 100, 0.5, [0.1,0.3,0.5,0.7,0.9])
 
 main()
