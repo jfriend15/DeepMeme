@@ -19,7 +19,7 @@ class memeBuilder:
 
     SENTENCE_BASE_SCORE = 100
 
-    def __init__(self, iterations, alpha, gamma):
+    def __init__(self, iterations, alpha, gamma, experimentName=0):
 
         self.topStates = []
         self.bottomStates = []
@@ -28,39 +28,46 @@ class memeBuilder:
         We will add these as we encounter them"""
         self.Q = {}
 
-        self.finishedMeme = ((), ())
-
         # Retrieve generated grammar in string
         startState = self.getStartState().strip(".")
         splitText = self.splitText(startState)
-        print("Start state is ", startState)
+        print("Start state: ", startState)
 
         self.glove = self.load_dict('Data/gloveDict.pkl')
         self.POSDict = self.load_dict('Data/grammarDict.pkl')
 
+        # Store information
+        #if experimentName != 0:
+        #    output = {}
+           
+
+
         for i in range(iterations):
-            tt = self.topText(alpha, gamma, splitText[0])  # top start
+            tt = self.topText(alpha, gamma, splitText[0]) 
             print('Iteration', i, ': ', tt)
         
-        #print("Top text is", tt)
-        #print(splitText[1])
         for i in range(iterations):
-            bt = self.bottomText(alpha, gamma, splitText[1], tt)  # bottom start
+            bt = self.bottomText(alpha, gamma, splitText[1], tt)
             print('Iteration', i, ': ', bt)
 
         finishedMeme = (tt, bt)
 
         print(finishedMeme)
 
+        #if experimentName != 0:
+            #df = pd.DataFrame(output, columns=['Filename', 'Label (4 clusters)', 'Label (7 clusters)'])
+            #df.to_csv(r'Results/' + experimentName + '.csv')
+
+    """Helper function"""
     def load_dict(self, file):
-        """Helper function"""
         dict_file = open(file, "rb")
         return pickle.load(dict_file)
 
+    """Retrives a generated grammar skeleton. Returns a string."""
     def getStartState(self):
-        """Retrives a generated grammar skeleton. Returns a string."""
         grammarData = open('Data/genGrammars.txt', 'r')
         grammars = [line.strip() for line in grammarData.readlines()]
+        
         # Ensure that the grammar has top and bottom text
         g =''
         while '|' not in g: # Take out commas for now
@@ -152,7 +159,6 @@ class memeBuilder:
                 chosenAction = self.softMax(actionValues)
 
             nextState = self.getNextState(s, chosenAction)
-            #print('Next state is ', nextState)
 
             if nextState == memeBuilder.ABSORB_STATE:
                 break
@@ -167,7 +173,6 @@ class memeBuilder:
             value = (1 - alpha) * self.Q.get((s, chosenAction)) + alpha * (
                     r + gamma * self.maxExpectedNextState(nextState, grammar, actions))
 
-            #print('Overall value is', value)
             self.Q[chosenAction] = value
 
             s = nextState
@@ -231,7 +236,6 @@ class memeBuilder:
 
     """Takes as parameters the sentence, the index of the word to be replaced, the new word, and top text if it's bottom
     text (otherwise topText is 0)"""
-
     def getWordScore(self, sentence, index, newWord, topText):
 
         def sentenceScore(s):
@@ -252,14 +256,14 @@ class memeBuilder:
             from the old words from embeddings in GLOVE.'''
             avg_dist = []
             if word not in self.glove.keys():
-                return 10
+                return 50
 
             new_embd = self.glove[word]
             for old_word in context:
                 # If either word isn't in glove or the old word is generic,
                 # give it a far distance to motivate not picking it
                 if self.isGeneric(old_word) or old_word not in self.glove.keys():
-                    dist = 10
+                    dist = 50
                 else:
                     embd = self.glove[old_word]
                     dist = np.linalg.norm(embd - new_embd)
@@ -313,6 +317,8 @@ class memeBuilder:
         if self.GENERICS.__contains__(word):
             return 1
         return 0
+
+
 
 
 def main():
