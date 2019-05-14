@@ -1,8 +1,11 @@
-# a text generator based on a Markov chain construction
-# takes 1 parameter: k = number of characters read in per link (larger = more accurate output),
+'''
+a text generator based on a Markov chain construction
+takes 1 parameter: k = number of characters read in per link 
+(larger = more accurate output)
+'''
 
 import sys
-import markov
+import Markov
 
 # builds a dictionary of strings (length k) : Markov link pairs
 def buildDict(inp, dict, k):
