@@ -1,4 +1,8 @@
-''' Builds the dictionary we need. '''
+''' 
+Builds the two dictionaries we need:  
+	1) Dictionary of available words for all parts of speech
+	2) Word embeddings from GloVe
+'''
 
 import nltk
 import pickle
