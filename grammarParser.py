@@ -1,6 +1,8 @@
-# nltk meme grammar parser for Markov chain
-# reads from files toptext.txt and bottomtext.txt
-# outputs to grammars.txt, which can be read into the textGen program
+'''
+Parses grammar with meme data with NLTK for Markov Chain
+Requires toptext.txt and bottom.text
+Outputs to grammars.txt
+'''
 
 import random
 import nltk

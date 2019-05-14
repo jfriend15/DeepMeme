@@ -1,11 +1,18 @@
+'''
+Where the magic happens and the memes are built.
+Calls GrammarParser, TextGen, and DictBuilder as necessary.
+Builds meme with Q-Learning.
+'''
+
+
 import math
 import random
 import pickle
 import os
 import numpy as np
 
-import dictBuilder
-import grammarParser
+import DictBuilder
+import GrammarParser
 
 
 class memeBuilder:
